@@ -1,0 +1,61 @@
+[package]
+name = "bg3-plugin-template"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+log = "0.4.20"
+simplelog = "0.12.1"
+anyhow = "1.0.75"
+directories = "5.0.1"
+backtrace = "0.3.69"
+libmem = { version = "4.2.1", features = ["static"] }
+serde = { version = "1.0.188", features = ["derive"] }
+toml = "0.8.2"
+bg3-plugin-lib = { git = "https://github.com/MolotovCherry/BG3-Plugin-Lib" }
+
+# docs can be found here. different api functions require adding the relevant features
+# https://microsoft.github.io/windows-docs-rs/doc/windows/index.html
+[dependencies.windows]
+version = "0.51.1"
+features = [
+    "Win32_Foundation",
+    "Win32_System_SystemServices",
+    # for the popup
+    "Win32_UI_WindowsAndMessaging",
+    # for debugger
+    "Win32_System_Diagnostics_Debug",
+]
+
+[build-dependencies]
+winres = "0.1.12"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+
+# stamp dll with project metadata 😄
+# see winres for more keys to stamp your dll with
+# https://docs.rs/winres/0.1.12/winres/struct.WindowsResource.html
+[package.metadata.winres]
+OriginalFilename = "PROGRAM.EXE"
+LegalCopyright = "Copyright © 2023"
+
+# Wait, but why did you vendor libmem-rs with a patch?
+# that is because the build.rs file needs to be patched to build the project and link it
+# this is not possible to fix without patching
+#
+# Please see the build.rs file in vendor/libmem-rs !
+# you may want to customize it, e.g. cache the built lib, since it takes awhile to build it
+#
+# We also added an edit to the Cargo.toml for build-dependencies since we used them in build.rs
+# that's it! Those are the only edits!
+#
+# Let's hope it gets fixed soon!
+# https://github.com/rdbo/libmem/issues/142
+[patch.crates-io]
+libmem = { path = './vendor/libmem-rs' }
